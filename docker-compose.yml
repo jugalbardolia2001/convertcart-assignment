@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cc_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-convertcart}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  product-service:
+    build: ./product-service
+    container_name: cc_product_service
+    env_file:
+      - ./product-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '4000:4000'
+    restart: unless-stopped
+
+  segment-service:
+    build: ./segment-service
+    container_name: cc_segment_service
+    env_file:
+      - ./segment-service/.env
+    environment:
+      # Fallbacks if .env not present
+      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL:-http://product-service:4000}
+      SEGMENT_SERVICE_PORT: ${SEGMENT_SERVICE_PORT:-4001}
+    depends_on:
+      - product-service
+    ports:
+      - '4001:4001'
+    restart: unless-stopped
+
+volumes:
+  pgdata:
