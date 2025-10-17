@@ -26,4 +26,8 @@ app.get('/health', (req, res) => {
    res.status(200).json({ message: 'Product service healthy' });
 });
 
+app.get('/', (req, res) => {
+   res.status(200).json({ message: 'Product micro-service is running' });
+});
+
 export default app;

@@ -23,4 +23,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'segment-service healthy' });
 });
 
+app.get('/', (req, res) => {
+   res.status(200).json({ message: 'Segment micro-service is running' });
+});
 export default app;
